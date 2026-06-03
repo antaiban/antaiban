@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Họp Để Thoát Nút — An Tái Bản · Full System</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Source+Serif+4:wght@300;400;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#1C1C1A;--bg:#FAFAF5;--accent:#C4622D;--accent-light:#F0D9CC;--muted:#6B6B63;--border:#DDD8CE;--warm:#F2EDE4;--sage:#E8EDDF;--sage-border:#C8D5BE;--white:#fff;--danger-bg:#FFF5F0;--danger-border:#F5C4AE}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:'Source Serif 4',Georgia,serif;background:var(--bg);color:var(--ink);font-size:10pt;line-height:1.7;min-height:100vh}
+
+/* ── HEADER ── */
+.header{background:var(--ink);padding:14px 32px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:200;border-bottom:1px solid rgba(255,255,255,.06)}
+.header-brand{font-family:'Playfair Display',serif;font-size:13pt;font-weight:700;color:var(--bg)}
+.header-sub{font-family:'JetBrains Mono',monospace;font-size:7pt;color:rgba(250,250,245,.4);letter-spacing:.1em;margin-top:1px}
+.header-actions{display:flex;gap:10px;align-items:center}
+.btn-print{font-family:'JetBrains Mono',monospace;font-size:8pt;letter-spacing:.06em;background:transparent;border:1px solid rgba(250,250,245,.2);color:rgba(250,250,245,.6);padding:7px 16px;border-radius:2px;cursor:pointer;transition:.2s}
+.btn-print:hover{border-color:rgba(250,250,245,.5);color:var(--bg)}
+.paid-badge{font-family:'JetBrains Mono',monospace;font-size:7.5pt;background:var(--accent);color:#fff;padding:5px 12px;border-radius:2px;letter-spacing:.08em}
+
+/* ── TABS ── */
+.tabs-bar{background:var(--white);border-bottom:2px solid var(--border);padding:0 32px;display:flex;gap:0;overflow-x:auto;position:sticky;top:53px;z-index:100}
+.tab-btn{font-family:'JetBrains Mono',monospace;font-size:8.5pt;letter-spacing:.06em;padding:14px 20px;border:none;background:none;cursor:pointer;color:var(--muted);white-space:nowrap;border-bottom:2px solid transparent;margin-bottom:-2px;transition:.2s}
+.tab-btn:hover{color:var(--ink)}
+.tab-btn.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:500}
+.tab-panel{display:none;padding:32px;max-width:780px;margin:0 auto}
+.tab-panel.active{display:block}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:28px;right:28px;background:var(--ink);color:var(--bg);font-family:'JetBrains Mono',monospace;font-size:9pt;padding:12px 20px;border-radius:3px;border-left:3px solid var(--accent);opacity:0;transform:translateY(8px);transition:.3s;pointer-events:none;z-index:999}
+.toast.show{opacity:1;transform:translateY(0)}
+
+/* ── COPY BUTTON ── */
+.copy-btn{font-family:'JetBrains Mono',monospace;font-size:8pt;letter-spacing:.06em;background:var(--warm);border:1px solid var(--border);color:var(--muted);padding:5px 14px;border-radius:2px;cursor:pointer;transition:.2s;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.copy-btn:hover{background:var(--accent-light);border-color:var(--accent);color:var(--accent)}
+.copy-btn svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.copy-btn.copied{background:#E8EDDF;border-color:var(--sage-border);color:#4A6741}
+
+/* ── SECTION LABELS ── */
+.sec-label{font-family:'JetBrains Mono',monospace;font-size:8pt;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);margin-bottom:8px}
+.sec-title{font-family:'Playfair Display',serif;font-size:22pt;font-weight:700;line-height:1.1;margin-bottom:8px}
+.sec-desc{font-size:10.5pt;color:var(--muted);margin-bottom:28px;max-width:560px;line-height:1.7}
+
+/* ── META ROW ── */
+.meta-row{display:flex;gap:20px;flex-wrap:wrap;margin-bottom:24px;padding-bottom:20px;border-bottom:1px solid var(--border)}
+.meta-chip{font-family:'JetBrains Mono',monospace;font-size:8.5pt;color:var(--muted);display:flex;align-items:center;gap:7px}
+.meta-dot{width:6px;height:6px;background:var(--accent);border-radius:50%;flex-shrink:0}
+
+/* ── PREP BOX ── */
+.prep-box{background:var(--sage);border:1px solid var(--sage-border);border-radius:4px;padding:22px 24px;margin:24px 0}
+.prep-box-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px}
+.prep-box-label{font-family:'JetBrains Mono',monospace;font-size:8pt;letter-spacing:.14em;text-transform:uppercase;color:#4A6741}
+.prep-text{font-size:10pt;color:var(--ink);line-height:1.7;margin-bottom:12px}
+.prep-qs{list-style:none;margin-top:10px}
+.prep-qs li{font-size:10pt;padding:8px 0;border-bottom:1px dashed var(--sage-border);display:flex;gap:10px;line-height:1.6}
+.prep-qs li:last-child{border:none}
+.prep-qs .qn{font-family:'JetBrains Mono',monospace;font-size:8pt;color:var(--accent);font-weight:500;flex-shrink:0;margin-top:2px}
+
+/* ── TIMELINE TABLE ── */
+.tl-wrap{margin:24px 0}
+.tl-header-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:10px}
+.tl-label{font-family:'JetBrains Mono',monospace;font-size:8pt;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+table.tl{width:100%;border-collapse:collapse}
+table.tl thead tr{background:var(--ink)}
+table.tl thead th{font-family:'JetBrains Mono',monospace;font-size:8pt;letter-spacing:.08em;text-transform:uppercase;color:var(--bg);padding:10px 14px;text-align:left;font-weight:500}
+table.tl thead th:first-child{width:72px}
+table.tl thead th:nth-child(2){width:130px}
+table.tl tbody tr{border-bottom:1px solid var(--border)}
+table.tl tbody tr:nth-child(even){background:var(--warm)}
+table.tl tbody tr.hl{background:var(--accent-light)}
+table.tl tbody td{padding:11px 14px;font-size:9.5pt;line-height:1.6;vertical-align:top}
+table.tl .t-time{font-family:'JetBrains Mono',monospace;font-size:8.5pt;color:var(--accent);font-weight:500}
+table.tl .t-part{font-weight:600;color:var(--ink)}
+table.tl .t-note{font-size:8.5pt;color:var(--muted);font-style:italic;margin-top:3px}
+
+/* ── TIMER ── */
+.timer-card{background:var(--ink);border-radius:6px;padding:24px;margin:24px 0;text-align:center}
+.timer-title{font-family:'JetBrains Mono',monospace;font-size:8pt;letter-spacing:.14em;text-transform:uppercase;color:rgba(250,250,245,.4);margin-bottom:16px}
+.timer-section-name{font-family:'Playfair Display',serif;font-style:italic;font-size:14pt;color:rgba(250,250,245,.7);margin-bottom:8px;min-height:1.6em}
+.timer-display{font-family:'JetBrains Mono',monospace;font-size:42pt;font-weight:500;color:var(--bg);line-height:1;margin-bottom:20px;transition:.3s}
+.timer-display.warning{color:#F5C842}
+.timer-display.over{color:var(--accent)}
+.timer-sections{display:flex;gap:6px;justify-content:center;margin-bottom:20px;flex-wrap:wrap}
+.timer-seg{font-family:'JetBrains Mono',monospace;font-size:7.5pt;padding:4px 10px;border-radius:2px;background:rgba(255,255,255,.07);color:rgba(250,250,245,.4);cursor:pointer;transition:.2s;border:1px solid transparent}
+.timer-seg:hover{background:rgba(255,255,255,.12);color:rgba(250,250,245,.7)}
+.timer-seg.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.timer-seg.done{background:rgba(255,255,255,.04);color:rgba(250,250,245,.2);text-decoration:line-through}
+.timer-btns{display:flex;gap:10px;justify-content:center}
+.timer-btn{font-family:'JetBrains Mono',monospace;font-size:9pt;letter-spacing:.06em;padding:10px 24px;border-radius:2px;cursor:pointer;border:none;transition:.2s}
+.timer-btn.start{background:var(--accent);color:#fff}
+.timer-btn.start:hover{background:#a84f24}
+.timer-btn.reset{background:rgba(255,255,255,.08);color:rgba(250,250,245,.6);border:1px solid rgba(255,255,255,.12)}
+.timer-btn.reset:hover{background:rgba(255,255,255,.14);color:var(--bg)}
+.timer-btn.skip{background:rgba(255,255,255,.08);color:rgba(250,250,245,.6);border:1px solid rgba(255,255,255,.12)}
+.timer-btn.skip:hover{background:rgba(255,255,255,.14)}
+.timer-progress{height:3px;background:rgba(255,255,255,.08);border-radius:2px;margin-bottom:20px;overflow:hidden}
+.timer-progress-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .5s}
+
+/* ── ACTION TABLE ── */
+.action-wrap{margin:24px 0}
+.action-header-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:10px}
+.action-table-title{font-family:'JetBrains Mono',monospace;font-size:8pt;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.action-btns{display:flex;gap:8px;flex-wrap:wrap}
+.at-wrap{overflow-x:auto}
+table.at{width:100%;border-collapse:collapse;min-width:560px}
+table.at thead th{background:var(--ink);color:var(--bg);font-family:'JetBrains Mono',monospace;font-size:7.5pt;letter-spacing:.08em;text-transform:uppercase;padding:10px 12px;text-align:left;font-weight:500}
+table.at tbody td{border-bottom:1px solid var(--border);padding:0}
+table.at tbody tr:nth-child(even) td{background:var(--warm)}
+table.at td[contenteditable]{padding:10px 12px;font-size:9.5pt;min-height:36px;outline:none;transition:.15s;cursor:text}
+table.at td[contenteditable]:focus{background:var(--accent-light)!important;box-shadow:inset 0 0 0 2px var(--accent)}
+table.at td[contenteditable]:empty::before{content:attr(data-ph);color:var(--border);font-style:italic;pointer-events:none}
+.at-add-row{width:100%;text-align:left;font-family:'JetBrains Mono',monospace;font-size:8pt;padding:10px 12px;background:transparent;border:none;border-top:1px dashed var(--border);color:var(--muted);cursor:pointer;display:flex;align-items:center;gap:8px;transition:.2s}
+.at-add-row:hover{color:var(--accent);background:var(--warm)}
+.at-del-btn{width:24px;height:24px;background:none;border:none;cursor:pointer;color:var(--border);font-size:14pt;line-height:1;display:flex;align-items:center;justify-content:center;padding:0;transition:.2s;flex-shrink:0}
+.at-del-btn:hover{color:var(--accent)}
+
+/* ── QUESTION BANK ── */
+.qbank{margin:24px 0}
+.qbank-title{font-family:'Playfair Display',serif;font-size:14pt;font-weight:700;margin-bottom:6px}
+.qbank-desc{font-size:10pt;color:var(--muted);margin-bottom:18px}
+.sit-block{border:1px solid var(--border);border-radius:4px;margin-bottom:14px;overflow:hidden}
+.sit-header{background:var(--warm);padding:11px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);cursor:pointer;user-select:none;transition:.15s}
+.sit-header:hover{background:var(--accent-light)}
+.sit-num{font-family:'JetBrains Mono',monospace;font-size:8pt;color:var(--accent);font-weight:500;flex-shrink:0}
+.sit-name{font-size:10.5pt;font-weight:600;color:var(--ink);flex:1}
+.sit-tag{font-family:'JetBrains Mono',monospace;font-size:7.5pt;color:var(--muted);background:var(--white);border:1px solid var(--border);padding:2px 8px;border-radius:10px;flex-shrink:0}
+.sit-toggle{font-family:'JetBrains Mono',monospace;font-size:10pt;color:var(--muted);flex-shrink:0;transition:.2s}
+.sit-body{padding:16px;display:none}
+.sit-block.open .sit-body{display:block}
+.sit-block.open .sit-toggle{transform:rotate(180deg)}
+.q-row{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px dashed var(--border)}
+.q-row:last-child{border:none;padding-bottom:0}
+.q-text{flex:1;font-size:10pt;line-height:1.6}
+.q-note{font-size:8.5pt;color:var(--muted);font-style:italic;margin-top:3px}
+.q-bullet{color:var(--accent);font-weight:700;flex-shrink:0;margin-top:2px}
+
+/* ── INSIGHT / CALLOUT ── */
+.insight{background:var(--ink);color:var(--bg);padding:18px 22px;border-radius:4px;margin:20px 0}
+.insight .i-label{font-family:'JetBrains Mono',monospace;font-size:7.5pt;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin-bottom:8px}
+.insight p{font-family:'Playfair Display',serif;font-size:11pt;font-style:italic;line-height:1.55}
+.callout{background:var(--accent-light);border:1px solid #E8A885;border-radius:4px;padding:16px 20px;margin:20px 0;font-size:10pt;line-height:1.65}
+.callout strong{color:var(--accent)}
+.danger-block{background:var(--danger-bg);border:1px solid var(--danger-border);border-left:4px solid var(--accent);border-radius:0 4px 4px 0;padding:20px 24px;margin:20px 0}
+.danger-label{font-family:'JetBrains Mono',monospace;font-size:8pt;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin-bottom:12px}
+.d-row{display:flex;gap:10px;padding:6px 0;border-bottom:1px dashed var(--danger-border);font-size:10pt;line-height:1.55}
+.d-row:last-child{border:none}
+.d-num{font-family:'JetBrains Mono',monospace;font-size:8pt;color:var(--accent);font-weight:700;flex-shrink:0;margin-top:2px}
+.d-tip{margin-top:12px;font-size:9.5pt;color:var(--accent);font-style:italic}
+
+/* ── PROMPT CARDS ── */
+.prompt-card{border:1px solid var(--border);border-radius:4px;overflow:hidden;margin:20px 0}
+.prompt-hdr{background:var(--ink);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.prompt-hdr-label{font-family:'JetBrains Mono',monospace;font-size:8pt;letter-spacing:.1em;text-transform:uppercase;color:var(--accent)}
+.prompt-hdr-tools{font-family:'JetBrains Mono',monospace;font-size:7.5pt;color:rgba(250,250,245,.4)}
+.prompt-body{background:#272723;color:#E8E4DA;padding:20px;font-family:'JetBrains Mono',monospace;font-size:8.5pt;line-height:1.85;white-space:pre-wrap;word-wrap:break-word;position:relative}
+.prompt-ph{color:#C4622D;font-style:italic}
+.prompt-kw{color:#8FB04A;font-weight:500}
+.prompt-foot{background:var(--warm);padding:12px 16px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;border-top:1px solid var(--border)}
+.prompt-tip{font-size:9pt;color:var(--muted);flex:1}
+.prompt-tip strong{color:var(--ink)}
+
+/* ── DIVIDER ── */
+.divider{display:flex;align-items:center;gap:16px;margin:36px 0}
+.d-line{flex:1;height:1px;background:var(--border)}
+.d-dot{width:8px;height:8px;background:var(--accent);border-radius:50%}
+
+/* ── FOOTER ── */
+.doc-footer{background:var(--ink);padding:24px 32px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-top:40px}
+.footer-brand{font-family:'Playfair Display',serif;font-size:14pt;font-weight:700;color:var(--bg)}
+.footer-handle{font-family:'JetBrains Mono',monospace;font-size:7.5pt;color:rgba(250,250,245,.35);letter-spacing:.08em;margin-top:2px}
+.footer-right{font-family:'JetBrains Mono',monospace;font-size:8pt;color:rgba(250,250,245,.35);text-align:right;letter-spacing:.04em;line-height:1.8}
+
+@media(max-width:600px){
+  .header{padding:12px 16px}
+  .tabs-bar{padding:0 16px}
+  .tab-btn{padding:12px 14px;font-size:8pt}
+  .tab-panel{padding:20px 16px}
+  .timer-display{font-size:32pt}
+  .timer-sections{gap:4px}
+}
+@media print{
+  .header,.tabs-bar,.timer-card,.action-btns,.copy-btn,.at-add-row,.at-del-btn,.btn-print,.toast{display:none!important}
+  .tab-panel{display:block!important;padding:0}
+  .sit-body{display:block!important}
+  body{font-size:9.5pt}
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div>
+    <div class="header-brand">An Tái Bản — Họp Để Thoát Nút</div>
+    <div class="header-sub">@antaiban · FULL SYSTEM · 149k</div>
+  </div>
+  <div class="header-actions">
+    <button class="btn-print" onclick="window.print()">🖨 In PDF</button>
+    <span class="paid-badge">FULL</span>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tabs-bar">
+  <button class="tab-btn active" onclick="switchTab('t1',this)">⚡ Họp Tháo Nút</button>
+  <button class="tab-btn" onclick="switchTab('t2',this)">📊 Họp Nhìn Thật</button>
+  <button class="tab-btn" onclick="switchTab('t3',this)">🤝 Gặp Riêng 1:1</button>
+  <button class="tab-btn" onclick="switchTab('t4',this)">🤖 AI Prompts</button>
+</div>
+
+<!-- ═══ TAB 1: HỌP THÁO NÚT ═══ -->
+<div class="tab-panel active" id="t1">
+  <div class="sec-label">Loại họp 01</div>
+  <h2 class="sec-title">Họp Tháo Nút</h2>
+  <div class="meta-row">
+    <div class="meta-chip"><div class="meta-dot"></div>60 phút</div>
+    <div class="meta-chip"><div class="meta-dot"></div>Mỗi tuần · cùng ngày cùng giờ</div>
+    <div class="meta-chip"><div class="meta-dot"></div>Team trực tiếp của bạn</div>
+  </div>
+  <p class="sec-desc">Không phải update tiến độ — cái đó qua Zalo được rồi. Họp là để tháo những việc đang kẹt mà không ai tự giải quyết được. Không có thứ gì kẹt → rút ngắn hoặc hoãn.</p>
+
+  <!-- PREP -->
+  <div class="prep-box">
+    <div class="prep-box-header">
+      <div class="prep-box-label">▶ Chuẩn bị trước 24h — gửi cho team</div>
+      <button class="copy-btn" onclick="copyPrep('prep1')">
+        <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+        Sao chép tin nhắn
+      </button>
+    </div>
+    <div class="prep-text">Gửi 3 câu hỏi này vào group Zalo trước họp ít nhất 24 tiếng. Ai không trả lời — không cần nhắc. Tuần sau tự nhớ.</div>
+    <ul class="prep-qs" id="prep1">
+      <li><span class="qn">H1</span><span>"Tuần này bạn bị <strong>kẹt ở đâu</strong> mà không tự giải quyết được — cần cả team hoặc sếp biết?"</span></li>
+      <li><span class="qn">H2</span><span>"Có <strong>quyết định nào</strong> cần sếp phê duyệt không? Nêu rõ: đề xuất là gì, cần quyết định gì."</span></li>
+      <li><span class="qn">H3</span><span>"Có <strong>thông tin gì</strong> cả team cần biết không — dù không cần quyết định?"</span></li>
+    </ul>
+    <div style="margin-top:12px;font-size:9.5pt;color:#4A6741;font-style:italic">→ Câu trả lời của team = Issue List của buổi họp. Ai không chuẩn bị = không có issue = không cần ngồi vào.</div>
+  </div>
+
+  <!-- RECORDING GUIDE -->
+  <div style="margin:20px 0;border:1px solid var(--sage-border,#C8D5BE);border-radius:4px;overflow:hidden">
+    <div style="background:var(--sage);padding:12px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;border-bottom:1px solid var(--sage-border,#C8D5BE)">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:8pt;letter-spacing:.14em;text-transform:uppercase;color:#4A6741">📱 3 cách ghi âm cuộc họp miễn phí</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:8pt;color:#4A6741">→ Sau đó dùng AI Prompt #2 để ra biên bản</div>
+    </div>
+    <div style="padding:16px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+      <div style="border:1px solid var(--border);border-radius:3px;padding:14px">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:8pt;color:var(--accent);margin-bottom:6px">Cách 01 — Desktop</div>
+        <div style="font-size:10pt;font-weight:600;margin-bottom:6px">Google Docs Voice Typing</div>
+        <div style="font-size:9pt;color:var(--muted);line-height:1.6">Mở Google Docs → Tools → Voice Typing → Click micro. Nói xong là có văn bản. Miễn phí hoàn toàn.</div>
+      </div>
+      <div style="border:1px solid var(--border);border-radius:3px;padding:14px">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:8pt;color:var(--accent);margin-bottom:6px">Cách 02 — Điện thoại</div>
+        <div style="font-size:10pt;font-weight:600;margin-bottom:6px">Ghi Chú + Giọng Nói</div>
+        <div style="font-size:9pt;color:var(--muted);line-height:1.6">iPhone: Notes → icon mic. Android: Google Keep hoặc Samsung Notes. Nói → ra chữ ngay, có sẵn trên máy.</div>
+      </div>
+      <div style="border:1px solid var(--border);border-radius:3px;padding:14px">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:8pt;color:var(--accent);margin-bottom:6px">Cách 03 — Ghi âm + AI</div>
+        <div style="font-size:10pt;font-weight:600;margin-bottom:6px">Ghi Âm → Upload AI</div>
+        <div style="font-size:9pt;color:var(--muted);line-height:1.6">App Ghi Âm mặc định → sau họp upload file vào ChatGPT/Claude → yêu cầu transcript và tóm tắt.</div>
+      </div>
+    </div>
+    <div style="padding:10px 16px;background:var(--warm);border-top:1px solid var(--border);font-size:9pt;color:var(--muted);line-height:1.6">
+      <strong style="color:var(--ink)">Sau khi có văn bản:</strong> Copy → paste vào AI Prompt #2 (tab AI Prompts) → ra biên bản 3 phần chuẩn gửi được Zalo ngay.
+    </div>
+  </div>
+
+  <!-- TIMER -->
+  <div class="timer-card" id="timer1">
+    <div class="timer-title">TIMER — HỌP THÁO NÚT 60 PHÚT</div>
+    <div class="timer-section-name" id="t1-sec-name">Nhấn một phần để bắt đầu</div>
+    <div class="timer-progress"><div class="timer-progress-fill" id="t1-prog" style="width:0%"></div></div>
+    <div class="timer-display" id="t1-display">00:00</div>
+    <div class="timer-sections">
+      <div class="timer-seg" onclick="startSection('t1',0)">Mở đầu<br><span style="opacity:.6">5'</span></div>
+      <div class="timer-seg" onclick="startSection('t1',1)">Số tuần<br><span style="opacity:.6">10'</span></div>
+      <div class="timer-seg" onclick="startSection('t1',2)">Việc cũ<br><span style="opacity:.6">5'</span></div>
+      <div class="timer-seg" onclick="startSection('t1',3)">⚡ Tháo Nút<br><span style="opacity:.6">35'</span></div>
+      <div class="timer-seg" onclick="startSection('t1',4)">Kết thúc<br><span style="opacity:.6">5'</span></div>
+    </div>
+    <div class="timer-btns">
+      <button class="timer-btn start" id="t1-playbtn" onclick="toggleTimer('t1')">▶ Bắt đầu</button>
+      <button class="timer-btn skip" onclick="nextSection('t1')">Phần tiếp →</button>
+      <button class="timer-btn reset" onclick="resetTimer('t1')">↺ Reset</button>
+    </div>
+  </div>
+
+  <!-- TIMELINE -->
+  <div class="tl-wrap">
+    <div class="tl-header-row">
+      <div class="tl-label">Cấu trúc 60 phút</div>
+    </div>
+    <table class="tl">
+      <thead><tr><th>Thời gian</th><th>Phần</th><th>Nội dung</th></tr></thead>
+      <tbody>
+        <tr><td class="t-time">5'</td><td class="t-part">Mở đầu</td><td>Mỗi người 1 câu tin tốt. Không bình luận. Mục đích: bật não ra khỏi công việc hàng ngày.<div class="t-note">Đừng bỏ bước này — team bỏ bước này thường họp nặng nề và giải quyết ít hơn.</div></td></tr>
+        <tr><td class="t-time">10'</td><td class="t-part">Số tuần này</td><td>Ai phụ trách số nào tự đọc: "Số tôi là X. Đạt / Chưa đạt. Lý do ngắn." Không giải thích dài — số không đạt ghi vào Issue List.<div class="t-note">Không họp nếu chưa có số. Ai chưa chuẩn bị số → issue đầu tiên ngay.</div></td></tr>
+        <tr><td class="t-time">5'</td><td class="t-part">Việc tuần trước</td><td>Đọc lại bảng hành động tuần trước. Ai chưa xong → chuyển thành issue. Không phân tích lý do ở đây.</td></tr>
+        <tr class="hl"><td class="t-time">35'</td><td class="t-part">⚡ Tháo Nút</td><td>Ưu tiên 3–5 issue từ list. Mỗi issue tối đa 7 phút. IDS: Xác định thật → Thảo luận → Ra quyết định.<div class="t-note">80% issue SME là triệu chứng, không phải vấn đề gốc. Hỏi "Cái này từ đâu ra?" trước khi thảo luận.</div></td></tr>
+        <tr><td class="t-time">5'</td><td class="t-part">Kết thúc</td><td>Điền bảng hành động. Đọc to lại. Mỗi người xác nhận. Điểm họp 1–10. Ai dưới 7 → nói 1 câu muốn thay đổi gì.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout"><strong>Quy tắc IDS:</strong> Khi ai giải thích dài hơn 1 phút — dừng lại và hỏi: "Đây là issue cần giải quyết hay chỉ là context? Nếu là issue, mình ghi vào list." Không để 1 issue chiếm hết 35 phút.</div>
+
+  <!-- ACTION TABLE -->
+  <div class="action-wrap">
+    <div class="action-header-row">
+      <div class="action-table-title">Bảng hành động — điền trực tiếp vào ô</div>
+      <div class="action-btns">
+        <button class="copy-btn" onclick="copyTable('at1')">
+          <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>Sao chép bảng
+        </button>
+        <button class="copy-btn" onclick="clearTable('at1')">Xóa trắng</button>
+      </div>
+    </div>
+    <div class="at-wrap">
+      <table class="at" id="at1">
+        <thead><tr><th>Việc cần làm</th><th>Ai phụ trách</th><th>Deadline</th><th>Còn mơ hồ ở đâu?</th><th style="width:36px"></th></tr></thead>
+        <tbody id="at1-body">
+          <tr><td contenteditable data-ph="Mô tả việc cụ thể..."></td><td contenteditable data-ph="Tên người"></td><td contenteditable data-ph="VD: T4 5pm"></td><td contenteditable data-ph="Ghi câu hỏi còn chưa rõ"></td><td><button class="at-del-btn" onclick="delRow(this)">×</button></td></tr>
+          <tr><td contenteditable data-ph="Mô tả việc cụ thể..."></td><td contenteditable data-ph="Tên người"></td><td contenteditable data-ph="VD: T4 5pm"></td><td contenteditable data-ph="Ghi câu hỏi còn chưa rõ"></td><td><button class="at-del-btn" onclick="delRow(this)">×</button></td></tr>
+          <tr><td contenteditable data-ph="Mô tả việc cụ thể..."></td><td contenteditable data-ph="Tên người"></td><td contenteditable data-ph="VD: T4 5pm"></td><td contenteditable data-ph="Ghi câu hỏi còn chưa rõ"></td><td><button class="at-del-btn" onclick="delRow(this)">×</button></td></tr>
+        </tbody>
+      </table>
+      <button class="at-add-row" onclick="addRow('at1')">+ Thêm dòng</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ TAB 2: HỌP NHÌN THẬT ═══ -->
+<div class="tab-panel" id="t2">
+  <div class="sec-label">Loại họp 02</div>
+  <h2 class="sec-title">Họp Nhìn Thật</h2>
+  <div class="meta-row">
+    <div class="meta-chip"><div class="meta-dot"></div>90 phút</div>
+    <div class="meta-chip"><div class="meta-dot"></div>Mỗi tháng · tuần đầu hoặc tuần cuối</div>
+    <div class="meta-chip"><div class="meta-dot"></div>Chủ + team lead (nếu có)</div>
+  </div>
+  <p class="sec-desc">Không phải nghe báo cáo. Là dừng lại nhìn số thật, tìm pattern đang hình thành, và quyết định điều chỉnh trước khi vấn đề nhỏ thành khủng hoảng.</p>
+
+  <div class="prep-box">
+    <div class="prep-box-header">
+      <div class="prep-box-label">▶ Chuẩn bị trước 3 ngày — giao rõ ai chuẩn bị gì</div>
+      <button class="copy-btn" onclick="copyText('prep2-text')">
+        <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>Sao chép format
+      </button>
+    </div>
+    <div class="prep-text">Giao trước 3 ngày theo format dưới — không phải sáng ngày họp.</div>
+    <div id="prep2-text" style="background:var(--white);border:1px solid var(--sage-border);border-radius:3px;padding:14px 18px;font-family:'JetBrains Mono',monospace;font-size:8.5pt;line-height:1.9;margin-top:12px;color:var(--ink)">
+[Tên bạn] phụ trách: [tên loại số]<br>
+Tháng [X]: [con số cụ thể]<br>
+So với tháng trước: [tăng/giảm X%]<br>
+Nhận xét của tôi trong 1 câu: _______________
+    </div>
+    <ul class="prep-qs" style="margin-top:14px">
+      <li><span class="qn">C1</span><span><strong>Chủ/Quản lý:</strong> Doanh thu, chi phí lớn nhất, số nhân sự vào/ra</span></li>
+      <li><span class="qn">C2</span><span><strong>Team lead (nếu có):</strong> KPI team, số issue đã giải quyết vs tồn, vấn đề lặp lại nhiều nhất</span></li>
+      <li><span class="qn">C3</span><span><strong>Ai cũng chuẩn bị:</strong> 1 điều tháng này làm tốt · 1 điều muốn làm khác tháng sau</span></li>
+    </ul>
+  </div>
+
+  <!-- TIMER T2 -->
+  <div class="timer-card">
+    <div class="timer-title">TIMER — HỌP NHÌN THẬT 90 PHÚT</div>
+    <div class="timer-section-name" id="t2-sec-name">Nhấn một phần để bắt đầu</div>
+    <div class="timer-progress"><div class="timer-progress-fill" id="t2-prog" style="width:0%"></div></div>
+    <div class="timer-display" id="t2-display">00:00</div>
+    <div class="timer-sections">
+      <div class="timer-seg" onclick="startSection('t2',0)">Nhìn số<br><span style="opacity:.6">20'</span></div>
+      <div class="timer-seg" onclick="startSection('t2',1)">Pattern 3T<br><span style="opacity:.6">15'</span></div>
+      <div class="timer-seg" onclick="startSection('t2',2)">⚡ Tháo nút<br><span style="opacity:.6">40'</span></div>
+      <div class="timer-seg" onclick="startSection('t2',3)">Tháng sau<br><span style="opacity:.6">10'</span></div>
+      <div class="timer-seg" onclick="startSection('t2',4)">Kết thúc<br><span style="opacity:.6">5'</span></div>
+    </div>
+    <div class="timer-btns">
+      <button class="timer-btn start" id="t2-playbtn" onclick="toggleTimer('t2')">▶ Bắt đầu</button>
+      <button class="timer-btn skip" onclick="nextSection('t2')">Phần tiếp →</button>
+      <button class="timer-btn reset" onclick="resetTimer('t2')">↺ Reset</button>
+    </div>
+  </div>
+
+  <div class="tl-wrap">
+    <div class="tl-label" style="margin-bottom:10px">Cấu trúc 90 phút</div>
+    <table class="tl">
+      <thead><tr><th>Thời gian</th><th>Phần</th><th>Nội dung</th></tr></thead>
+      <tbody>
+        <tr><td class="t-time">20'</td><td class="t-part">Nhìn số</td><td>Từng người báo theo format đã chuẩn bị. Không kể chuyện dài. Số chưa tốt → ghi Issue List, không giải thích ngay.</td></tr>
+        <tr><td class="t-time">15'</td><td class="t-part">Pattern 3 tháng</td><td>Đặt 3 tháng liền nhau lên bàn. Hỏi: "Xu hướng gì đang hình thành? Vấn đề nào đang lặp lại?" Ghi ra, chưa giải quyết.<div class="t-note">Bước này quan trọng hơn số 1 tháng đơn lẻ. Pattern mới là thứ cần hành động.</div></td></tr>
+        <tr class="hl"><td class="t-time">40'</td><td class="t-part">⚡ Tháo nút lớn nhất</td><td>Chọn 1–2 vấn đề quan trọng nhất. IDS đầy đủ. Ra quyết định + người chịu trách nhiệm + deadline.<div class="t-note">Không cố giải quyết 5 vấn đề trong 40 phút. Giải quyết thật 2 cái tốt hơn nửa vời 5 cái.</div></td></tr>
+        <tr><td class="t-time">10'</td><td class="t-part">Mục tiêu tháng sau</td><td>Số mục tiêu. Điều chỉnh gì. Ai phụ trách gì khác. Tối đa 3 ưu tiên — không hơn.</td></tr>
+        <tr><td class="t-time">5'</td><td class="t-part">Kết thúc</td><td>Bảng hành động. Điểm họp. Gửi biên bản trong 30 phút.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="qbank" style="margin-top:28px">
+    <div class="qbank-title">5 câu hỏi sắc bén cho Họp Nhìn Thật</div>
+    <div class="qbank-desc">Chọn 2–3 câu phù hợp với tình hình tháng đó. Không cần hỏi hết.</div>
+    <div class="sit-block open">
+      <div class="sit-header">
+        <span class="sit-name">Bộ câu hỏi — nhấn vào câu để sao chép</span>
+        <span class="sit-toggle">▼</span>
+      </div>
+      <div class="sit-body">
+        <div class="q-row">
+          <span class="q-bullet">→</span>
+          <div style="flex:1">
+            <div class="q-text">"Số nào đang <strong>che giấu vấn đề thật</strong> mà mình chưa nói thẳng ra?"</div>
+            <div class="q-note">Câu này mở ra những vấn đề mà mọi người biết nhưng không ai chủ động nêu.</div>
+          </div>
+          <button class="copy-btn" onclick="copyText(this.previousElementSibling.previousElementSibling)">
+            <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+          </button>
+        </div>
+        <div class="q-row">
+          <span class="q-bullet">→</span>
+          <div style="flex:1">
+            <div class="q-text">"Tháng này mình đã làm gì <strong>đúng — cần nhân rộng</strong>? Không phải may mắn không lặp lại được."</div>
+          </div>
+          <button class="copy-btn" onclick="copyText(this.previousElementSibling.querySelector('.q-text'))">
+            <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+          </button>
+        </div>
+        <div class="q-row">
+          <span class="q-bullet">→</span>
+          <div style="flex:1">
+            <div class="q-text">"Vấn đề nào đã <strong>xuất hiện 3 lần liên tiếp</strong> mà vẫn chưa giải quyết tận gốc?"</div>
+            <div class="q-note">Vấn đề lặp 3 lần là vấn đề hệ thống — không phải lỗi cá nhân.</div>
+          </div>
+          <button class="copy-btn" onclick="copyText(this.previousElementSibling.querySelector('.q-text'))">
+            <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+          </button>
+        </div>
+        <div class="q-row">
+          <span class="q-bullet">→</span>
+          <div style="flex:1">
+            <div class="q-text">"Nếu tháng sau <strong>chỉ được làm 3 việc</strong> — 3 việc đó là gì? Tại sao 3 cái đó?"</div>
+          </div>
+          <button class="copy-btn" onclick="copyText(this.previousElementSibling.querySelector('.q-text'))">
+            <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+          </button>
+        </div>
+        <div class="q-row">
+          <span class="q-bullet">→</span>
+          <div style="flex:1">
+            <div class="q-text">"Ai đang <strong>load quá</strong>, ai đang <strong>load thiếu</strong> — có thể cân bằng lại không?"</div>
+            <div class="q-note">Thường tiết lộ vấn đề nhân sự âm ỉ trước khi ai nghỉ.</div>
+          </div>
+          <button class="copy-btn" onclick="copyText(this.previousElementSibling.querySelector('.q-text'))">
+            <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="action-wrap" style="margin-top:28px">
+    <div class="action-header-row">
+      <div class="action-table-title">Bảng hành động tháng</div>
+      <div class="action-btns">
+        <button class="copy-btn" onclick="copyTable('at2')">
+          <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>Sao chép bảng
+        </button>
+        <button class="copy-btn" onclick="clearTable('at2')">Xóa trắng</button>
+      </div>
+    </div>
+    <div class="at-wrap">
+      <table class="at" id="at2">
+        <thead><tr><th>Việc cần làm</th><th>Ai phụ trách</th><th>Deadline</th><th>Còn mơ hồ ở đâu?</th><th style="width:36px"></th></tr></thead>
+        <tbody id="at2-body">
+          <tr><td contenteditable data-ph="Mô tả việc cụ thể..."></td><td contenteditable data-ph="Tên người"></td><td contenteditable data-ph="Ngày cụ thể"></td><td contenteditable data-ph="Ghi câu hỏi còn chưa rõ"></td><td><button class="at-del-btn" onclick="delRow(this)">×</button></td></tr>
+          <tr><td contenteditable data-ph="Mô tả việc cụ thể..."></td><td contenteditable data-ph="Tên người"></td><td contenteditable data-ph="Ngày cụ thể"></td><td contenteditable data-ph="Ghi câu hỏi còn chưa rõ"></td><td><button class="at-del-btn" onclick="delRow(this)">×</button></td></tr>
+        </tbody>
+      </table>
+      <button class="at-add-row" onclick="addRow('at2')">+ Thêm dòng</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ TAB 3: GẶP RIÊNG 1:1 ═══ -->
+<div class="tab-panel" id="t3">
+  <div class="sec-label">Loại họp 03</div>
+  <h2 class="sec-title">Gặp Riêng 1:1</h2>
+  <div class="meta-row">
+    <div class="meta-chip"><div class="meta-dot"></div>20 phút</div>
+    <div class="meta-chip"><div class="meta-dot"></div>Mỗi tuần hoặc 2 tuần/lần</div>
+    <div class="meta-chip"><div class="meta-dot"></div>Mỗi người báo cáo trực tiếp cho bạn</div>
+  </div>
+  <p class="sec-desc">Mục đích: giữ người bằng cách hiểu họ — không phải kiểm tra việc. 70% thời gian là để họ nói. Loại họp mà hầu hết chủ SME bỏ qua và hối hận nhất khi nhân viên ra đi.</p>
+
+  <div class="prep-box">
+    <div class="prep-box-label">▶ Chuẩn bị 3 phút trước khi gặp — bắt buộc</div>
+    <ul class="prep-qs" style="margin-top:14px">
+      <li><span class="qn">P1</span><span><strong>Việc đã giao họ lần trước</strong> → tiến độ thế nào? (Check note từ lần họp trước)</span></li>
+      <li><span class="qn">P2</span><span><strong>Cam kết họ đã đưa ra</strong> lần trước → giữ không?</span></li>
+      <li><span class="qn">P3</span><span><strong>1 điều tôi quan sát</strong> về họ kỳ này → tích cực hay đáng lo?</span></li>
+    </ul>
+    <div style="margin-top:12px;font-size:9.5pt;color:#4A6741;font-style:italic">→ Vào gặp không có chuẩn bị → cả buổi hỏi chung chung → không ai được gì.</div>
+  </div>
+
+  <div class="tl-wrap">
+    <div class="tl-label" style="margin-bottom:10px">Cấu trúc 20 phút</div>
+    <table class="tl">
+      <thead><tr><th>Thời gian</th><th>Phần</th><th>Nội dung</th></tr></thead>
+      <tbody>
+        <tr><td class="t-time">5'</td><td class="t-part">Check-in cá nhân</td><td>Hỏi về họ — không phải về việc. Thật sự nghe, không check điện thoại.<div class="t-note">Bước này xây tin tưởng tích lũy. Không có tin tưởng, phần sau không ai nói thật.</div></td></tr>
+        <tr class="hl"><td class="t-time">10'</td><td class="t-part">Để họ nói (70%)</td><td>Hỏi câu theo tình huống. Nghe. Đặt câu hỏi tiếp từ những gì họ nói — không theo script cứng. Không phán xét. Không giải quyết ngay mọi thứ họ nêu.</td></tr>
+        <tr><td class="t-time">5'</td><td class="t-part">Chốt 1–2 việc</td><td>Đồng thuận 1–2 việc cụ thể cho kỳ tới. Ghi ra. Không giao quá 2 việc — nhiều hơn là áp lực.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="qbank" style="margin-top:28px">
+    <div class="qbank-title">Bộ câu hỏi theo 5 tình huống thật</div>
+    <div class="qbank-desc">Chọn tình huống phù hợp. Không hỏi theo script — câu hỏi đúng tình huống mở ra cuộc trò chuyện thật.</div>
+
+    <div class="sit-block open">
+      <div class="sit-header" onclick="toggleSit(this)">
+        <span class="sit-num">TH 01</span>
+        <span class="sit-name">Nhân viên đang ổn định — buổi check-in thông thường</span>
+        <span class="sit-tag">Mỗi tuần</span>
+        <span class="sit-toggle">▼</span>
+      </div>
+      <div class="sit-body">
+        <div class="q-row"><span class="q-bullet">→</span><div style="flex:1"><div class="q-text">"Tuần/tháng này bạn <strong>tự hào nhất</strong> về điều gì?"</div><div class="q-note">Không có câu trả lời → dấu hiệu họ không thấy giá trị trong việc mình làm.</div></div><button class="copy-btn" onclick="copyText(this.previousElementSibling.querySelector('.q-text'))"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button></div>
+        <div class="q-row"><span class="q-bullet">→</span><div style="flex:1"><div class="q-text">"Điều gì đang <strong>làm chậm</strong> công việc của bạn mà tôi chưa biết?"</div></div><button class="copy-btn" onclick="copyText(this.previousElementSibling.querySelector('.q-text'))"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button></div>
+        <div class="q-row"><span class="q-bullet">→</span><div style="flex:1"><div class="q-text">"Nếu có <strong>1 thứ tôi có thể làm</strong> để bạn làm tốt hơn kỳ tới — đó là gì?"</div></div><button class="copy-btn" onclick="copyText(this.previousElementSibling.querySelector('.q-text'))"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button></div>
+      </div>
+    </div>
+
+    <div class="sit-block">
+      <div class="sit-header" onclick="toggleSit(this)">
+        <span class="sit-num">TH 02</span>
+        <span class="sit-name">Nhân viên đang xuống tinh thần (ít nói, ít sáng kiến, đến trễ hơn)</span>
+        <span class="sit-tag">Dùng khi quan sát được</span>
+        <span class="sit-toggle">▼</span>
+      </div>
+      <div class="sit-body">
+        <div class="q-row"><span class="q-bullet">→</span><div style="flex:1"><div class="q-text">"Tôi để ý <strong>kỳ này bạn có vẻ khác</strong>. Có chuyện gì ảnh hưởng đến công việc không?"</div><div class="q-note">Không hỏi "bạn có ổn không?" → 100% trả lời "dạ ổn". Hỏi cụ thể hơn.</div></div><button class="copy-btn" onclick="copyText(this.previousElementSibling.querySelector('.q-text'))"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button></div>
+        <div class="q-row"><span class="q-bullet">→</span><div style="flex:1"><div class="q-text">"Điều gì trong công việc hiện tại đang làm bạn <strong>thấy nặng nhất</strong>?"</div></div><button class="copy-btn" onclick="copyText(this.previousElementSibling.querySelector('.q-text'))"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button></div>
+        <div class="q-row"><span class="q-bullet">→</span><div style="flex:1"><div class="q-text">"Có thứ gì tôi đang làm — hoặc <strong>không làm</strong> — khiến bạn khó hơn không?"</div><div class="q-note">Câu này cần tin tưởng trước. Đừng hỏi nếu chưa có nền tảng.</div></div><button class="copy-btn" onclick="copyText(this.previousElementSibling.querySelector('.q-text'))"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button></div>
+      </div>
+    </div>
+
+    <div class="sit-block">
+      <div class="sit-header" onclick="toggleSit(this)">
+        <span class="sit-num">TH 03</span>
+        <span class="sit-name">Muốn biết ai đang nghĩ đến chuyện nghỉ</span>
+        <span class="sit-tag">Mỗi tháng</span>
+        <span class="sit-toggle">▼</span>
+      </div>
+      <div class="sit-body">
+        <div class="q-row"><span class="q-bullet">→</span><div style="flex:1"><div class="q-text">"Nếu có <strong>1 thứ ở công ty có thể thay đổi ngay</strong> — bạn muốn thay đổi gì?"</div><div class="q-note">Câu trả lời tiết lộ mức độ cam kết. Ai không có câu trả lời, hoặc hời hợt → đáng lo.</div></div><button class="copy-btn" onclick="copyText(this.previousElementSibling.querySelector('.q-text'))"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button></div>
+        <div class="q-row"><span class="q-bullet">→</span><div style="flex:1"><div class="q-text">"1–2 năm tới bạn muốn mình ở đâu? <strong>Bạn thấy đường đến đó thế nào</strong> từ đây?"</div></div><button class="copy-btn" onclick="copyText(this.previousElementSibling.querySelector('.q-text'))"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button></div>
+        <div class="q-row"><span class="q-bullet">→</span><div style="flex:1"><div class="q-text">"Điều gì khiến bạn <strong>vẫn còn ở đây</strong>?"</div><div class="q-note">Thường ra câu trả lời thật nhất về lý do giữ chân họ — hoặc không.</div></div><button class="copy-btn" onclick="copyText(this.previousElementSibling.querySelector('.q-text'))"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button></div>
+      </div>
+    </div>
+
+    <div class="sit-block">
+      <div class="sit-header" onclick="toggleSit(this)">
+        <span class="sit-num">TH 04</span>
+        <span class="sit-name">Muốn tìm người kế cận tiềm năng</span>
+        <span class="sit-tag">Mỗi quý</span>
+        <span class="sit-toggle">▼</span>
+      </div>
+      <div class="sit-body">
+        <div class="q-row"><span class="q-bullet">→</span><div style="flex:1"><div class="q-text">"Nếu tôi <strong>vắng 1 tuần</strong>, bạn nghĩ ai trong team có thể handle việc của bạn?"</div><div class="q-note">Người có tư duy lãnh đạo tự nhiên thường nghĩ đến điều này. Người chỉ làm việc của mình thì không.</div></div><button class="copy-btn" onclick="copyText(this.previousElementSibling.querySelector('.q-text'))"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button></div>
+        <div class="q-row"><span class="q-bullet">→</span><div style="flex:1"><div class="q-text">"Bạn đang <strong>dạy lại gì</strong> cho người mới nhất trong team?"</div></div><button class="copy-btn" onclick="copyText(this.previousElementSibling.querySelector('.q-text'))"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button></div>
+        <div class="q-row"><span class="q-bullet">→</span><div style="flex:1"><div class="q-text">"Nếu bạn được <strong>phụ trách thêm 1 mảng</strong> — bạn muốn phụ trách mảng nào? Tại sao?"</div></div><button class="copy-btn" onclick="copyText(this.previousElementSibling.querySelector('.q-text'))"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button></div>
+      </div>
+    </div>
+
+    <div class="sit-block">
+      <div class="sit-header" onclick="toggleSit(this)">
+        <span class="sit-num">TH 05</span>
+        <span class="sit-name">Câu hỏi ngược — 90% quản lý không dám hỏi</span>
+        <span class="sit-tag">Chỉ khi có tin tưởng</span>
+        <span class="sit-toggle">▼</span>
+      </div>
+      <div class="sit-body">
+        <div class="q-row"><span class="q-bullet">→</span><div style="flex:1"><div class="q-text">"Kỳ này tôi đã làm gì <strong>khiến công việc của bạn khó hơn</strong>?"</div><div class="q-note">Hỏi và không phòng thủ với câu trả lời → team thấy bạn thật sự muốn cải thiện.</div></div><button class="copy-btn" onclick="copyText(this.previousElementSibling.querySelector('.q-text'))"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button></div>
+        <div class="q-row"><span class="q-bullet">→</span><div style="flex:1"><div class="q-text">"Có điều gì <strong>cả team đang nghĩ</strong> nhưng không ai nói với tôi không?"</div></div><button class="copy-btn" onclick="copyText(this.previousElementSibling.querySelector('.q-text'))"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button></div>
+        <div class="q-row"><span class="q-bullet">→</span><div style="flex:1"><div class="q-text">"Tôi nên <strong>làm thêm gì</strong>? Tôi nên <strong>làm bớt gì</strong>?"</div></div><button class="copy-btn" onclick="copyText(this.previousElementSibling.querySelector('.q-text'))"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button></div>
+        <div style="margin-top:12px;padding:10px 14px;background:var(--danger-bg);border:1px solid var(--danger-border);border-radius:3px;font-size:9pt;color:var(--accent)">⚠️ Đừng hỏi TH 05 nếu chưa có ít nhất 2–3 tháng 1:1 đều đặn. Hỏi sớm quá → không ai dám nói thật.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="danger-block" style="margin-top:28px">
+    <div class="danger-label">5 dấu hiệu sớm nhân viên sắp nghỉ — 10 năm quan sát</div>
+    <div class="d-row"><span class="d-num">01</span><span>Bắt đầu <strong>hỏi về lương của đồng nghiệp</strong>. Theo kinh nghiệm: hỏi lương đồng nghiệp = 99% hôm sau sẽ nghỉ.</span></div>
+    <div class="d-row"><span class="d-num">02</span><span>Đột nhiên <strong>chủ động hỏi về quy trình, tài liệu công việc</strong> — có thể đang chuẩn bị bàn giao âm thầm.</span></div>
+    <div class="d-row"><span class="d-num">03</span><span><strong>Ít ý kiến hơn trong họp</strong>, ít chủ động hơn với công việc ngoài nhiệm vụ được giao.</span></div>
+    <div class="d-row"><span class="d-num">04</span><span>Hay <strong>xin về sớm hoặc nghỉ phép lẻ</strong> bất thường — có thể đang đi phỏng vấn.</span></div>
+    <div class="d-row"><span class="d-num">05</span><span><strong>Hôm trước nhiệt tình, hôm sau im lặng đột ngột</strong> — không có sự kiện nào giải thích được.</span></div>
+    <div class="d-tip">→ Thấy 3/5 dấu hiệu ở cùng 1 người: gặp riêng ngay tuần đó — đừng đợi đến 1:1 lịch định kỳ.</div>
+  </div>
+</div>
+
+<!-- ═══ TAB 4: AI PROMPTS ═══ -->
+<div class="tab-panel" id="t4">
+  <div class="sec-label">Công cụ đi kèm</div>
+  <h2 class="sec-title">AI Prompts</h2>
+  <div class="meta-row">
+    <div class="meta-chip"><div class="meta-dot"></div>Copy 1 click</div>
+    <div class="meta-chip"><div class="meta-dot"></div>Dùng với ChatGPT hoặc Claude</div>
+    <div class="meta-chip"><div class="meta-dot"></div>Điền chỗ in nghiêng màu cam</div>
+  </div>
+  <p class="sec-desc">3 prompt thực tế. Mỗi cái giải quyết 1 việc cụ thể thường tốn nhiều thời gian nhất của người quản lý.</p>
+
+  <!-- PROMPT 1 -->
+  <div class="prompt-card">
+    <div class="prompt-hdr">
+      <span class="prompt-hdr-label">Prompt 1 — Phân tích Issue List từ Zalo/chat team</span>
+      <span class="prompt-hdr-tools">ChatGPT / Claude</span>
+    </div>
+    <div class="prompt-body" id="p1">Đây là các tin nhắn trong group chat/Zalo team của tôi trong tuần qua:
+
+<span class="prompt-ph">[PASTE NỘI DUNG CHAT VÀO ĐÂY]</span>
+
+Hãy phân loại thành 3 nhóm:
+
+<span class="prompt-kw">Nhóm 1 — Đưa vào Issue List họp tuần:</span>
+Vấn đề được đề cập từ 2 lần trở lên, HOẶC ảnh hưởng đến nhiều người
+
+<span class="prompt-kw">Nhóm 2 — Cần quyết định từ sếp:</span>
+Việc ai đó đang chờ phê duyệt hoặc cần ra hướng đi
+
+<span class="prompt-kw">Nhóm 3 — Tự xử được không cần họp:</span>
+Vấn đề đơn giản — đề xuất cách xử lý nhanh
+
+Yêu cầu: mỗi nhóm tối đa 5 item, ngắn gọn 1-2 dòng/item.
+Không thêm việc không có trong chat.</div>
+    <div class="prompt-foot">
+      <div class="prompt-tip"><strong>Dùng khi:</strong> Trước mỗi Họp Tháo Nút. Chụp màn hình nhóm chat → copy text → paste vào đây.</div>
+      <button class="copy-btn" onclick="copyPrompt('p1')">
+        <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>Sao chép prompt
+      </button>
+    </div>
+  </div>
+
+  <!-- PROMPT 2 -->
+  <div class="prompt-card">
+    <div class="prompt-hdr">
+      <span class="prompt-hdr-label">Prompt 2 — Viết biên bản từ ghi chú thô</span>
+      <span class="prompt-hdr-tools">ChatGPT / Claude</span>
+    </div>
+    <div class="prompt-body" id="p2">Đây là ghi chú thô từ cuộc họp hôm nay:
+
+<span class="prompt-ph">[PASTE GHI CHÚ VÀO ĐÂY — dù viết tắt, lộn xộn cũng được]</span>
+
+Viết biên bản họp gồm 3 phần:
+
+<span class="prompt-kw">Phần 1 — Quyết định đã chốt:</span>
+Chỉ những gì thật sự được đồng ý — không kể context hay thảo luận
+
+<span class="prompt-kw">Phần 2 — Bảng hành động:</span>
+Việc cần làm | Ai phụ trách | Deadline
+(Ai chưa rõ → ghi "Chưa xác định")
+
+<span class="prompt-kw">Phần 3 — Vấn đề chưa giải quyết:</span>
+Những thứ nêu lên nhưng chưa có kết luận → mang sang tuần sau
+
+Yêu cầu: ngắn gọn, gửi được qua Zalo, không quá 1 trang A4.
+Không thêm việc không có trong ghi chú.</div>
+    <div class="prompt-foot">
+      <div class="prompt-tip"><strong>Lưu ý:</strong> AI tóm tắt nhanh nhưng có thể bỏ sót. Đọc lại 1 lần trước khi gửi cho team.</div>
+      <button class="copy-btn" onclick="copyPrompt('p2')">
+        <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>Sao chép prompt
+      </button>
+    </div>
+  </div>
+
+  <!-- PROMPT 3 -->
+  <div class="prompt-card">
+    <div class="prompt-hdr">
+      <span class="prompt-hdr-label">Prompt 3 — Chuẩn bị câu hỏi 1:1 theo tình huống</span>
+      <span class="prompt-hdr-tools">ChatGPT / Claude</span>
+    </div>
+    <div class="prompt-body" id="p3">Nhân viên tên <span class="prompt-ph">[Tên]</span>, vị trí <span class="prompt-ph">[Vị trí]</span>, làm <span class="prompt-ph">[X tháng/năm]</span>.
+
+Tình huống kỳ này: <span class="prompt-ph">[Mô tả ngắn — ví dụ: "đang làm tốt nhưng có vẻ bị nhàm", hoặc "vừa xử lý khách hàng khó, chưa tốt", hoặc "số giảm 2 tuần không rõ lý do"]</span>
+
+Gợi ý 4–5 câu hỏi để tôi hỏi trong 1:1 nhằm:
+→ Hiểu rõ tình huống thật, không phải phiên bản họ muốn tôi nghe
+→ Không khiến họ cảm thấy bị tra hỏi hay phòng thủ
+→ Mở ra cuộc trò chuyện có thể dẫn đến hành động thực tế
+
+Tone: gần gũi, không cứng nhắc, phù hợp với bối cảnh SME Việt Nam.
+Format: mỗi câu hỏi + 1 dòng ngắn giải thích tại sao hỏi câu đó.</div>
+    <div class="prompt-foot">
+      <div class="prompt-tip"><strong>Tip:</strong> Không cần dùng hết câu AI gợi ý. Chọn 2–3 câu cảm thấy tự nhiên nhất với phong cách của bạn.</div>
+      <button class="copy-btn" onclick="copyPrompt('p3')">
+        <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>Sao chép prompt
+      </button>
+    </div>
+  </div>
+
+  <div class="insight" style="margin-top:28px">
+    <div class="i-label">Tư duy An Tái Bản — quan trọng</div>
+    <p>"AI không làm việc thay bạn. AI làm việc theo cách bạn hướng dẫn. Prompt hay → kết quả hay. Prompt mơ hồ → kết quả vô dụng. Biết cách ra đề bài cho AI đúng là lợi thế cạnh tranh thật sự."</p>
+  </div>
+
+  <div style="margin-top:24px;border:1px solid var(--border);border-radius:4px;overflow:hidden">
+    <div style="background:var(--warm);padding:12px 16px;border-bottom:1px solid var(--border)">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:8pt;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)">🔒 Bảo mật thông tin khi dùng AI</div>
+    </div>
+    <div style="padding:16px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div style="padding:14px;background:#FFF9F0;border:1px solid #F0D8A0;border-radius:3px">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:8pt;color:#B8860B;margin-bottom:6px">⚠ Không nên</div>
+        <div style="font-size:9.5pt;color:var(--ink);line-height:1.65">Paste tên nhân viên thật, số liệu tài chính cụ thể, thông tin khách hàng vào ChatGPT miễn phí (có lưu lịch sử để train model).</div>
+      </div>
+      <div style="padding:14px;background:var(--sage);border:1px solid var(--sage-border,#C8D5BE);border-radius:3px">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:8pt;color:#4A6741;margin-bottom:6px">✅ Cách làm an toàn</div>
+        <div style="font-size:9.5pt;color:var(--ink);line-height:1.65">Thay tên thật bằng chức vụ ("nhân viên A"). Tắt lịch sử trong ChatGPT (Settings → Data controls). Dùng Claude có Privacy Mode.</div>
+      </div>
+      <div style="padding:14px;background:var(--warm);border:1px solid var(--border);border-radius:3px">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:8pt;color:var(--muted);margin-bottom:6px">🔐 Họp nhạy cảm</div>
+        <div style="font-size:9.5pt;color:var(--ink);line-height:1.65">Ghi tay vào Bảng 4 cột thay vì dùng AI transcript. AI chỉ cần cho họp thông thường — không cần mọi cuộc họp.</div>
+      </div>
+      <div style="padding:14px;background:var(--warm);border:1px solid var(--border);border-radius:3px">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:8pt;color:var(--muted);margin-bottom:6px">📋 Nguyên tắc chung</div>
+        <div style="font-size:9.5pt;color:var(--ink);line-height:1.65">Thông tin nào không muốn ai đọc → đừng paste vào AI. Đơn giản vậy thôi. AI là tool xử lý văn bản, không phải kho lưu bí mật.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<div class="doc-footer">
+  <div>
+    <div class="footer-brand">An Tái Bản</div>
+    <div class="footer-handle">@antaiban · TikTok & Facebook · Câu hỏi? Nhắn inbox.</div>
+  </div>
+  <div class="footer-right">
+    <div>Họp Để Thoát Nút — Full System · 149k</div>
+    <div>© 2026 An Tái Bản · Không chia sẻ hoặc bán lại</div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">Đã sao chép!</div>
+
+<script>
+// ── TABS ──
+function switchTab(id,btn){
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ── TOAST ──
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg||'Đã sao chép!';
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2200);
+}
+
+// ── COPY FUNCTIONS ──
+function copyText(el){
+  let txt='';
+  if(typeof el==='string'){
+    const e=document.getElementById(el);
+    if(!e)return;
+    txt=e.innerText||e.textContent;
+  } else if(el instanceof Element){
+    txt=el.innerText||el.textContent;
+  }
+  txt=txt.replace(/\u00A0/g,' ').trim();
+  navigator.clipboard.writeText(txt).then(()=>showToast('Đã sao chép!')).catch(()=>{
+    const ta=document.createElement('textarea');
+    ta.value=txt;ta.style.position='fixed';ta.style.opacity='0';
+    document.body.appendChild(ta);ta.select();document.execCommand('copy');
+    document.body.removeChild(ta);showToast('Đã sao chép!');
+  });
+}
+
+function copyPrep(id){
+  const el=document.getElementById(id);
+  const items=el.querySelectorAll('li');
+  let txt='';
+  items.forEach(li=>{txt+=li.innerText.trim()+'\n\n';});
+  navigator.clipboard.writeText(txt.trim()).then(()=>showToast('Đã sao chép tin nhắn!')).catch(()=>{});
+}
+
+function copyPrompt(id){
+  const el=document.getElementById(id);
+  const txt=el.innerText||el.textContent;
+  navigator.clipboard.writeText(txt.trim()).then(()=>{
+    showToast('Đã sao chép prompt!');
+    const btn=el.nextElementSibling.querySelector('.copy-btn');
+    if(btn){btn.classList.add('copied');btn.textContent='✓ Đã sao chép';setTimeout(()=>{btn.classList.remove('copied');btn.innerHTML='<svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>Sao chép prompt';},2000);}
+  }).catch(()=>{});
+}
+
+// ── ACTION TABLE ──
+function addRow(tableId){
+  const tbody=document.getElementById(tableId+'-body');
+  const tr=document.createElement('tr');
+  tr.innerHTML='<td contenteditable data-ph="Mô tả việc cụ thể..."></td><td contenteditable data-ph="Tên người"></td><td contenteditable data-ph="Ngày cụ thể"></td><td contenteditable data-ph="Ghi câu hỏi còn chưa rõ"></td><td><button class="at-del-btn" onclick="delRow(this)">×</button></td>';
+  tbody.appendChild(tr);
+}
+
+function delRow(btn){
+  const row=btn.closest('tr');
+  const tbody=row.parentNode;
+  if(tbody.children.length>1){row.remove();}
+  else{row.querySelectorAll('[contenteditable]').forEach(td=>td.textContent='');}
+}
+
+function copyTable(tableId){
+  const table=document.getElementById(tableId);
+  const rows=table.querySelectorAll('tbody tr');
+  let txt='Việc cần làm\tAi phụ trách\tDeadline\tCòn mơ hồ?\n';
+  rows.forEach(row=>{
+    const cells=row.querySelectorAll('td[contenteditable]');
+    const parts=[];
+    cells.forEach(c=>parts.push((c.textContent||'').trim()));
+    txt+=parts.join('\t')+'\n';
+  });
+  navigator.clipboard.writeText(txt.trim()).then(()=>showToast('Đã sao chép bảng!')).catch(()=>{});
+}
+
+function clearTable(tableId){
+  document.querySelectorAll('#'+tableId+' td[contenteditable]').forEach(td=>td.textContent='');
+  showToast('Đã xóa bảng');
+}
+
+// ── ACCORDION ──
+function toggleSit(header){
+  const block=header.closest('.sit-block');
+  block.classList.toggle('open');
+}
+
+// ── TIMER LOGIC ──
+const TIMERS={
+  t1:{sections:[{name:'Mở đầu',min:5},{name:'Số tuần này',min:10},{name:'Việc tuần trước',min:5},{name:'⚡ Tháo Nút',min:35},{name:'Kết thúc',min:5}],cur:0,rem:0,total:0,running:false,interval:null},
+  t2:{sections:[{name:'Nhìn số tháng này',min:20},{name:'Pattern 3 tháng',min:15},{name:'⚡ Tháo nút lớn nhất',min:40},{name:'Mục tiêu tháng sau',min:10},{name:'Kết thúc',min:5}],cur:0,rem:0,total:0,running:false,interval:null}
+};
+
+function startSection(tid,idx){
+  const t=TIMERS[tid];
+  if(t.interval)clearInterval(t.interval);
+  t.cur=idx;t.running=false;
+  t.rem=t.sections[idx].min*60;
+  t.total=t.sections[idx].min*60;
+  updateTimerUI(tid);
+  updateSegs(tid);
+  document.getElementById(tid+'-playbtn').textContent='▶ Bắt đầu';
+}
+
+function toggleTimer(tid){
+  const t=TIMERS[tid];
+  if(!t.total)startSection(tid,0);
+  t.running=!t.running;
+  if(t.running){
+    document.getElementById(tid+'-playbtn').textContent='⏸ Pause';
+    t.interval=setInterval(()=>tickTimer(tid),1000);
+  } else {
+    document.getElementById(tid+'-playbtn').textContent='▶ Tiếp tục';
+    clearInterval(t.interval);
+  }
+}
+
+function tickTimer(tid){
+  const t=TIMERS[tid];
+  t.rem--;
+  if(t.rem<=0){
+    clearInterval(t.interval);t.running=false;
+    document.getElementById(tid+'-playbtn').textContent='▶ Bắt đầu';
+    if(t.cur<t.sections.length-1){
+      showToast('✓ Xong phần này! Sang phần tiếp →');
+      setTimeout(()=>nextSection(tid),1500);
+    } else {
+      showToast('✓ Họp kết thúc! Điền bảng hành động 👆');
+    }
+  }
+  updateTimerUI(tid);
+}
+
+function nextSection(tid){
+  const t=TIMERS[tid];
+  if(t.cur<t.sections.length-1){
+    startSection(tid,t.cur+1);
+  }
+}
+
+function resetTimer(tid){
+  const t=TIMERS[tid];
+  clearInterval(t.interval);
+  t.running=false;t.rem=0;t.total=0;t.cur=0;
+  document.getElementById(tid+'-display').textContent='00:00';
+  document.getElementById(tid+'-display').className='timer-display';
+  document.getElementById(tid+'-sec-name').textContent='Nhấn một phần để bắt đầu';
+  document.getElementById(tid+'-prog').style.width='0%';
+  document.getElementById(tid+'-playbtn').textContent='▶ Bắt đầu';
+  document.querySelectorAll('#timer1 .timer-seg, #'+tid+' .timer-seg').forEach(s=>s.classList.remove('active','done'));
+}
+
+function updateTimerUI(tid){
+  const t=TIMERS[tid];
+  const m=Math.floor(t.rem/60),s=t.rem%60;
+  const disp=document.getElementById(tid+'-display');
+  disp.textContent=(m<10?'0':'')+m+':'+(s<10?'0':'')+s;
+  const pct=t.total>0?Math.round((1-t.rem/t.total)*100):0;
+  document.getElementById(tid+'-prog').style.width=pct+'%';
+  document.getElementById(tid+'-sec-name').textContent=t.sections[t.cur].name;
+  disp.className='timer-display'+(t.rem<=60&&t.rem>0?' warning':t.rem<=0?' over':'');
+}
+
+function updateSegs(tid){
+  const t=TIMERS[tid];
+  const container=document.getElementById(tid==='t1'?'timer1':'t2').querySelectorAll('.timer-seg');
+  container.forEach((seg,i)=>{
+    seg.classList.remove('active','done');
+    if(i<t.cur)seg.classList.add('done');
+    else if(i===t.cur)seg.classList.add('active');
+  });
+}
+</script>
+</body>
+</html>
